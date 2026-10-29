@@ -1,4 +1,4 @@
-:HL["/todo-app/_next/static/chunks/21eikkuk_y44q.css","style"]
+:HL["/todo-app/_next/static/chunks/3zf9rz_6gyn0n.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":"/_not-found","h":96,"c":"$Q2"}]]
-0:{"b":"giWYIXRuhmgY-ZvAoPIW9","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"bHN9gttrdDgGp1frqkhnB","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
