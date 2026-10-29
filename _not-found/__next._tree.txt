@@ -1,4 +1,4 @@
 :HL["/todo-app/_next/static/chunks/1n5mco5wncxrl.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":"/_not-found","h":96,"c":"$Q2"}]]
-0:{"b":"2Pb8noe_I20wfqT3reJS5","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"5tZkIdAreGIsGqz0e1a4H","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
