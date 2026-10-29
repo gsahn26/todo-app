@@ -3,6 +3,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Calendar from "@/components/Calendar";
+import TodoRow from "@/components/TodoRow";
+
+function todayKey() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
 export default function Home() {
   const [todos, setTodos] = useState([]);
@@ -10,6 +19,8 @@ export default function Home() {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deletingIds, setDeletingIds] = useState(new Set());
+  const todayTodos = todos.filter((todo) => todo.due_date === todayKey());
 
   async function load() {
     const { data, error } = await supabase
@@ -52,8 +63,16 @@ export default function Home() {
   }
 
   async function deleteTodo(id) {
-    await supabase.from("todos").delete().eq("id", id);
-    await load();
+    setDeletingIds((prev) => new Set(prev).add(id));
+    setTimeout(async () => {
+      await supabase.from("todos").delete().eq("id", id);
+      await load();
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 300);
   }
 
   return (
@@ -87,6 +106,31 @@ export default function Home() {
             </button>
           </form>
 
+          {loaded && todayTodos.length > 0 && (
+            <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/30">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white">
+                  오늘
+                </span>
+                <span className="text-xs text-amber-700 dark:text-amber-300">
+                  {todayTodos.length}개의 할 일이 오늘 마감이에요
+                </span>
+              </div>
+              <ul className="flex flex-col gap-1">
+                {todayTodos.map((todo) => (
+                  <TodoRow
+                    key={todo.id}
+                    todo={todo}
+                    onToggle={toggleTodo}
+                    onDelete={deleteTodo}
+                    deleting={deletingIds.has(todo.id)}
+                    variant="today"
+                  />
+                ))}
+              </ul>
+            </div>
+          )}
+
           {!loaded ? (
             <p className="py-8 text-center text-sm text-zinc-400">
               불러오는 중...
@@ -98,39 +142,13 @@ export default function Home() {
           ) : (
             <ul className="flex flex-col gap-2">
               {todos.map((todo) => (
-                <li
+                <TodoRow
                   key={todo.id}
-                  className="flex items-center gap-3 rounded-xl px-1 py-1.5"
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!todo.completed}
-                    onChange={() => toggleTodo(todo)}
-                    className="h-4 w-4 accent-indigo-600"
-                  />
-                  <span
-                    className={`flex-1 text-sm ${
-                      todo.completed
-                        ? "text-zinc-400 line-through"
-                        : "text-zinc-900 dark:text-zinc-50"
-                    }`}
-                  >
-                    {todo.title}
-                  </span>
-                  {todo.due_date && (
-                    <span className="rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-                      마감 {todo.due_date}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => deleteTodo(todo.id)}
-                    aria-label="삭제"
-                    className="text-lg leading-none text-red-500 hover:text-red-700"
-                  >
-                    ×
-                  </button>
-                </li>
+                  todo={todo}
+                  onToggle={toggleTodo}
+                  onDelete={deleteTodo}
+                  deleting={deletingIds.has(todo.id)}
+                />
               ))}
             </ul>
           )}
