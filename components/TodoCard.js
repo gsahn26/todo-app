@@ -1,6 +1,12 @@
 "use client";
 
-export default function TodoCard({ todo, onToggle, onDelete, deleting, accent = "indigo" }) {
+const PRIORITY_MAP = {
+  high: { label: "높음", className: "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-300" },
+  medium: { label: "보통", className: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
+  low: { label: "낮음", className: "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400" },
+};
+
+export default function TodoCard({ todo, category, onToggle, onDelete, deleting, accent = "indigo" }) {
   const accentMap = {
     indigo: "accent-indigo-600",
     amber: "accent-amber-500",
@@ -11,6 +17,7 @@ export default function TodoCard({ todo, onToggle, onDelete, deleting, accent = 
     amber: "bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
     emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300",
   };
+  const priority = PRIORITY_MAP[todo.priority] || PRIORITY_MAP.medium;
 
   return (
     <div
@@ -34,13 +41,30 @@ export default function TodoCard({ todo, onToggle, onDelete, deleting, accent = 
         >
           {todo.title}
         </p>
-        {todo.due_date && (
-          <span
-            className={`mt-1 inline-block rounded-md px-1.5 py-0.5 text-[11px] ${badgeMap[accent]}`}
-          >
-            마감 {todo.due_date}
-          </span>
+        {todo.memo && (
+          <p className="mt-0.5 break-words text-xs text-zinc-400 dark:text-zinc-500">
+            {todo.memo}
+          </p>
         )}
+        <div className="mt-1.5 flex flex-wrap items-center gap-1">
+          {category && (
+            <span
+              className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] text-white"
+              style={{ backgroundColor: category.color }}
+            >
+              <span>{category.emoji}</span>
+              <span>{category.name}</span>
+            </span>
+          )}
+          <span className={`rounded-md px-1.5 py-0.5 text-[11px] ${priority.className}`}>
+            {priority.label}
+          </span>
+          {todo.due_date && (
+            <span className={`rounded-md px-1.5 py-0.5 text-[11px] ${badgeMap[accent]}`}>
+              마감 {todo.due_date}
+            </span>
+          )}
+        </div>
       </div>
       <button
         type="button"

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Calendar from "@/components/Calendar";
 import TodoCard from "@/components/TodoCard";
+import CategoryManager from "@/components/CategoryManager";
+import AuthGate from "@/components/AuthGate";
 
 function todayKey() {
   const now = new Date();
@@ -37,21 +39,27 @@ const COLUMNS = [
   },
 ];
 
-export default function Home() {
+function Board({ user, logout }) {
   const [todos, setTodos] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [title, setTitle] = useState("");
+  const [memo, setMemo] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [priority, setPriority] = useState("medium");
+  const [categoryId, setCategoryId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deletingIds, setDeletingIds] = useState(new Set());
   const today = todayKey();
+  const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c]));
 
   async function load() {
-    const { data, error } = await supabase
-      .from("todos")
-      .select("*")
-      .order("id", { ascending: false });
-    if (!error) setTodos(data);
+    const [todosRes, categoriesRes] = await Promise.all([
+      supabase.from("todos").select("*").order("id", { ascending: false }),
+      supabase.from("categories").select("*").order("id", { ascending: true }),
+    ]);
+    if (!todosRes.error) setTodos(todosRes.data);
+    if (!categoriesRes.error) setCategories(categoriesRes.data);
     setLoaded(true);
   }
 
@@ -59,11 +67,20 @@ export default function Home() {
     load();
   }, []);
 
-  async function addTodo(titleValue, dueDateValue) {
+  async function createCategory({ name, emoji, color }) {
+    await supabase.from("categories").insert({ name, emoji, color, user_id: user.id });
+    await load();
+  }
+
+  async function addTodo(titleValue, dueDateValue, opts = {}) {
     if (!titleValue.trim()) return;
     await supabase.from("todos").insert({
       title: titleValue.trim(),
       due_date: dueDateValue || null,
+      memo: opts.memo || null,
+      priority: opts.priority || "medium",
+      category_id: opts.categoryId || null,
+      user_id: user.id,
     });
     await load();
   }
@@ -72,9 +89,16 @@ export default function Home() {
     e.preventDefault();
     if (!title.trim()) return;
     setSubmitting(true);
-    await addTodo(title, dueDate);
+    await addTodo(title, dueDate, {
+      memo,
+      priority,
+      categoryId: categoryId || null,
+    });
     setTitle("");
+    setMemo("");
     setDueDate("");
+    setPriority("medium");
+    setCategoryId("");
     setSubmitting(false);
   }
 
@@ -102,21 +126,63 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-100 px-4 py-10 dark:bg-black">
       <div className="mx-auto w-full max-w-5xl">
-        <h1 className="mb-6 text-center text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-          My Todo Board
-        </h1>
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+            My Todo Board
+          </h1>
+          <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+            <span>{user.email}</span>
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-full border border-zinc-300 px-3 py-1 hover:bg-zinc-200 dark:border-zinc-700 dark:hover:bg-zinc-800"
+            >
+              로그아웃
+            </button>
+          </div>
+        </div>
+
+        <CategoryManager categories={categories} onCreate={createCategory} />
 
         <form
           onSubmit={handleAdd}
-          className="mx-auto mb-8 flex max-w-xl gap-2 rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+          className="mx-auto mb-8 flex max-w-xl flex-wrap gap-2 rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
         >
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="할 일을 입력하세요"
-            className="flex-1 rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+            className="min-w-0 flex-1 rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
           />
+          <input
+            type="text"
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+            placeholder="메모 (선택)"
+            className="min-w-0 flex-1 rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+          />
+          <select
+            value={priority}
+            onChange={(e) => setPriority(e.target.value)}
+            className="rounded-xl border border-zinc-200 bg-white px-2 py-2.5 text-sm text-zinc-900 outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+          >
+            <option value="high">높음</option>
+            <option value="medium">보통</option>
+            <option value="low">낮음</option>
+          </select>
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="rounded-xl border border-zinc-200 bg-white px-2 py-2.5 text-sm text-zinc-900 outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+          >
+            <option value="">카테고리 없음</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.emoji} {c.name}
+              </option>
+            ))}
+          </select>
           <input
             type="date"
             value={dueDate}
@@ -163,6 +229,7 @@ export default function Home() {
                         <TodoCard
                           key={todo.id}
                           todo={todo}
+                          category={categoryMap[todo.category_id]}
                           onToggle={toggleTodo}
                           onDelete={deleteTodo}
                           deleting={deletingIds.has(todo.id)}
@@ -181,4 +248,8 @@ export default function Home() {
       </div>
     </div>
   );
+}
+
+export default function Home() {
+  return <AuthGate>{({ user, logout }) => <Board user={user} logout={logout} />}</AuthGate>;
 }
