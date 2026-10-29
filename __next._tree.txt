@@ -1,5 +1,5 @@
-:HL["/todo-app/_next/static/chunks/0zh-a0y9k__-v.css","style"]
+:HL["/todo-app/_next/static/chunks/1n5mco5wncxrl.css","style"]
 :HL["/todo-app/_next/static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/todo-app/_next/static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 1:[["children",{"s":"__PAGE__","h":160}]]
-0:{"b":"_X8Ll3sQgbWXJ5q7TbzqN","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"2Pb8noe_I20wfqT3reJS5","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
