@@ -10,6 +10,7 @@ export default function AuthGate({ children }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -25,12 +26,13 @@ export default function AuthGate({ children }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setInfo("");
     setSubmitting(true);
     try {
       if (mode === "signup") {
         const data = await signUp(email, password);
         if (!data.session) {
-          setError("가입 확인 메일을 보냈어요. 메일함을 확인해주세요.");
+          setInfo("가입 확인 메일을 보냈어요. 메일함에서 인증 링크를 눌러주세요.");
           setSubmitting(false);
           return;
         }
@@ -81,6 +83,11 @@ export default function AuthGate({ children }) {
                 {error}
               </p>
             )}
+            {info && (
+              <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                {info}
+              </p>
+            )}
             <button
               type="submit"
               disabled={submitting}
@@ -94,6 +101,7 @@ export default function AuthGate({ children }) {
             onClick={() => {
               setMode(mode === "login" ? "signup" : "login");
               setError("");
+              setInfo("");
             }}
             className="mt-4 w-full text-center text-xs text-zinc-500 underline underline-offset-4 dark:text-zinc-400"
           >
