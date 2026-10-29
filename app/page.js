@@ -48,6 +48,7 @@ function Board({ user, logout }) {
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("medium");
   const [categoryId, setCategoryId] = useState("");
+  const [memoOpen, setMemoOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deletingIds, setDeletingIds] = useState(new Set());
   const today = todayKey();
@@ -96,6 +97,7 @@ function Board({ user, logout }) {
     });
     setTitle("");
     setMemo("");
+    setMemoOpen(false);
     setDueDate("");
     setPriority("medium");
     setCategoryId("");
@@ -155,13 +157,27 @@ function Board({ user, logout }) {
             placeholder="할 일을 입력하세요"
             className="min-w-0 flex-1 rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
           />
-          <input
-            type="text"
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-            placeholder="메모 (선택)"
-            className="min-w-0 flex-1 rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-          />
+          <button
+            type="button"
+            onClick={() => setMemoOpen((v) => !v)}
+            className={`shrink-0 rounded-xl border px-3.5 py-2.5 text-sm transition-colors ${
+              memoOpen || memo
+                ? "border-indigo-500 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300"
+                : "border-zinc-200 bg-white text-zinc-500 hover:border-indigo-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400"
+            }`}
+          >
+            📝 메모{memo ? " ✓" : ""}
+          </button>
+          {memoOpen && (
+            <textarea
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              placeholder="메모를 입력하세요"
+              rows={3}
+              autoFocus
+              className="w-full basis-full resize-none rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+            />
+          )}
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
