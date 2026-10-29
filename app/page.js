@@ -24,17 +24,22 @@ export default function Home() {
     load();
   }, []);
 
+  async function addTodo(titleValue, dueDateValue) {
+    if (!titleValue.trim()) return;
+    await supabase.from("todos").insert({
+      title: titleValue.trim(),
+      due_date: dueDateValue || null,
+    });
+    await load();
+  }
+
   async function handleAdd(e) {
     e.preventDefault();
     if (!title.trim()) return;
     setSubmitting(true);
-    await supabase.from("todos").insert({
-      title: title.trim(),
-      due_date: dueDate || null,
-    });
+    await addTodo(title, dueDate);
     setTitle("");
     setDueDate("");
-    await load();
     setSubmitting(false);
   }
 
@@ -131,7 +136,7 @@ export default function Home() {
           )}
         </div>
 
-        <Calendar todos={todos} />
+        <Calendar todos={todos} onAddTodo={addTodo} />
       </div>
     </div>
   );

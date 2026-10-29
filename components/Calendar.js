@@ -11,11 +11,14 @@ function toDateKey(date) {
   return `${y}-${m}-${d}`;
 }
 
-export default function Calendar({ todos }) {
+export default function Calendar({ todos, onAddTodo }) {
   const [cursor, setCursor] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [quickTitle, setQuickTitle] = useState("");
+  const [quickSubmitting, setQuickSubmitting] = useState(false);
 
   const todosByDate = {};
   for (const todo of todos) {
@@ -41,6 +44,20 @@ export default function Calendar({ todos }) {
   }
   function goNextMonth() {
     setCursor(new Date(year, month + 1, 1));
+  }
+
+  function handleSelectDate(key) {
+    setSelectedDate(key === selectedDate ? null : key);
+    setQuickTitle("");
+  }
+
+  async function handleQuickAdd(e) {
+    e.preventDefault();
+    if (!quickTitle.trim() || !selectedDate) return;
+    setQuickSubmitting(true);
+    await onAddTodo(quickTitle, selectedDate);
+    setQuickTitle("");
+    setQuickSubmitting(false);
   }
 
   return (
@@ -79,13 +96,18 @@ export default function Calendar({ todos }) {
           const key = toDateKey(new Date(year, month, day));
           const dayTodos = todosByDate[key] || [];
           const isToday = key === todayKey;
+          const isSelected = key === selectedDate;
           return (
-            <div
+            <button
               key={key}
-              className={`min-h-16 rounded-lg border px-1 py-1 text-left align-top ${
-                isToday
-                  ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/40"
-                  : "border-transparent"
+              type="button"
+              onClick={() => handleSelectDate(key)}
+              className={`min-h-16 rounded-lg border px-1 py-1 text-left align-top transition-colors ${
+                isSelected
+                  ? "border-indigo-600 bg-indigo-100 dark:bg-indigo-900/50"
+                  : isToday
+                    ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/40"
+                    : "border-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800"
               }`}
             >
               <div
@@ -117,10 +139,44 @@ export default function Calendar({ todos }) {
                   </div>
                 )}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
+
+      {selectedDate && (
+        <form
+          onSubmit={handleQuickAdd}
+          className="mt-3 flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 p-2 dark:border-indigo-900 dark:bg-indigo-950/30"
+        >
+          <span className="shrink-0 text-xs font-medium text-indigo-700 dark:text-indigo-300">
+            {selectedDate}에 추가
+          </span>
+          <input
+            type="text"
+            autoFocus
+            value={quickTitle}
+            onChange={(e) => setQuickTitle(e.target.value)}
+            placeholder="할 일을 입력하세요"
+            className="flex-1 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-sm text-zinc-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+          />
+          <button
+            type="submit"
+            disabled={quickSubmitting}
+            className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+          >
+            추가
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedDate(null)}
+            aria-label="닫기"
+            className="text-lg leading-none text-zinc-400 hover:text-zinc-600"
+          >
+            ×
+          </button>
+        </form>
+      )}
     </div>
   );
 }
