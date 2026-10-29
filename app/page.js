@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Calendar from "@/components/Calendar";
 import TodoCard from "@/components/TodoCard";
@@ -51,6 +51,7 @@ function Board({ user, logout }) {
   const [memoOpen, setMemoOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deletingIds, setDeletingIds] = useState(new Set());
+  const dueDateRef = useRef(null);
   const today = todayKey();
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c]));
 
@@ -89,6 +90,12 @@ function Board({ user, logout }) {
   async function handleAdd(e) {
     e.preventDefault();
     if (!title.trim()) return;
+    if (!dueDate) {
+      alert("마감일을 설정해주세요.");
+      dueDateRef.current?.focus();
+      dueDateRef.current?.showPicker?.();
+      return;
+    }
     setSubmitting(true);
     await addTodo(title, dueDate, {
       memo,
@@ -206,6 +213,7 @@ function Board({ user, logout }) {
             ))}
           </select>
           <input
+            ref={dueDateRef}
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
