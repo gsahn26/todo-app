@@ -58,6 +58,7 @@ export default function Calendar({ todos, onAddTodo }) {
     await onAddTodo(quickTitle, selectedDate);
     setQuickTitle("");
     setQuickSubmitting(false);
+    setSelectedDate(null);
   }
 
   return (
