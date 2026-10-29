@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
 import Calendar from "@/components/Calendar";
 import TodoCard from "@/components/TodoCard";
@@ -91,7 +92,9 @@ function Board({ user, logout }) {
     e.preventDefault();
     if (!title.trim()) return;
     if (!dueDate) {
-      alert("마감일을 설정해주세요.");
+      toast.error("마감일을 설정해주세요.", {
+        description: "언제까지 할 일인지 날짜를 선택해주세요.",
+      });
       dueDateRef.current?.focus();
       dueDateRef.current?.showPicker?.();
       return;
