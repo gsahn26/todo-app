@@ -65,6 +65,27 @@ RLS가 지금은 정상 동작하지만, **클라이언트 코드가 RLS만 100%
 - `npx next build` 재실행 → 빌드 성공, `out/index.html`의 `<title>`이 `My Todo Board`로 바뀐 것 확인
 - 이번 변경은 GitHub Pages(`gh-pages` 브랜치)에는 아직 재배포하지 않음 — 리뷰 후 반영 예정
 
+## 3-1. 실제 테스트 계정 2개로 교차 검증 (2026-10-30 추가)
+
+과제 요구사항 중 "서로 다른 계정으로 로그인해 다른 계정의 할 일은 보이지 않는지, 수정·삭제 요청도
+거절되는지 확인"을 실제 테스트 계정 2개로 재현했다.
+
+- 계정 A: `todo-board-test@mailinator.com` — 기존 할 일 "수학 숙제"(id=13) 보유
+- 계정 B: `todo-board-test-b@mailinator.com` — 새로 가입, mailinator 공개 받은편지함에서 Supabase
+  인증 메일의 확인 링크를 직접 열어 이메일 인증까지 완료
+
+| 테스트 | 방법 | 결과 |
+|---|---|---|
+| B가 로그인 후 목록 조회 | UI로 로그인 → 보드 확인 | 예정/오늘/완료 전부 0건 (A의 "수학 숙제" 안 보임) — [docs/screenshots/10-account-b-sees-no-data.jpg](docs/screenshots/10-account-b-sees-no-data.jpg) |
+| B가 자기 할 일 추가 | UI로 할 일 추가 | 본인 보드에만 생성됨 — [docs/screenshots/11-account-b-own-todo.jpg](docs/screenshots/11-account-b-own-todo.jpg) |
+| B가 A의 할 일(id=13)을 REST API로 직접 UPDATE 시도 | B의 로그인 토큰으로 `PATCH /rest/v1/todos?id=eq.13` (제목을 "해킹당함"으로 변경 시도) | `200` 이지만 영향받은 행 0개(응답 `[]`) — RLS가 조용히 걸러냄 |
+| B가 A의 할 일(id=13)을 REST API로 직접 DELETE 시도 | B의 로그인 토큰으로 `DELETE /rest/v1/todos?id=eq.13` | `200` 이지만 영향받은 행 0개(응답 `[]`) — 삭제 안 됨 |
+| 공격 시도 후 A의 데이터 확인 | A의 토큰으로 다시 조회 | "수학 숙제" 제목 그대로, 완료 상태 그대로, 삭제도 안 됨 — [docs/screenshots/09-account-a-unaffected-after-attack.jpg](docs/screenshots/09-account-a-unaffected-after-attack.jpg) |
+
+**결론: 계정 B는 A의 데이터를 조회·수정·삭제 어느 것도 할 수 없었고, A의 데이터는 공격 시도 전후로
+완전히 동일하게 유지됐다.** RLS(`auth.uid() = user_id`)와 오늘 추가한 클라이언트 `user_id` 필터가
+의도대로 동작함을 실제 계정 2개로 재확인했다.
+
 ## 4. 리뷰 시간에 같이 보면 좋을 질문
 
 1. `user_id` 클라이언트 필터처럼, "서버가 막아주더라도 클라이언트에서도 한 번 더 막는" 방어 심화를
