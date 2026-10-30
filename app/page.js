@@ -58,8 +58,16 @@ function Board({ user, logout }) {
 
   async function load() {
     const [todosRes, categoriesRes] = await Promise.all([
-      supabase.from("todos").select("*").order("id", { ascending: false }),
-      supabase.from("categories").select("*").order("id", { ascending: true }),
+      supabase
+        .from("todos")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("id", { ascending: false }),
+      supabase
+        .from("categories")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("id", { ascending: true }),
     ]);
     if (!todosRes.error) setTodos(todosRes.data);
     if (!categoriesRes.error) setCategories(categoriesRes.data);
