@@ -98,7 +98,7 @@ function Board({ user, logout }) {
 
   async function handleAdd(e) {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (submitting || !title.trim()) return;
     if (!dueDate) {
       toast.error("마감일을 설정해주세요.", {
         description: "언제까지 할 일인지 날짜를 선택해주세요.",
@@ -172,6 +172,8 @@ function Board({ user, logout }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={(e) => {
+              // 한글 조합 중 Enter는 무시 (조합 종료 + 실제 Enter로 두 번 들어와 중복 추가됨)
+              if (e.nativeEvent.isComposing) return;
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 handleAdd(e);
